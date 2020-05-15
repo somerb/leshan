@@ -22,6 +22,8 @@ package org.eclipse.leshan.client.californium.object;
 import static org.eclipse.leshan.core.californium.ResponseCodeUtil.toCoapResponseCode;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.eclipse.californium.core.coap.CoAP.ResponseCode;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
@@ -67,7 +69,9 @@ import org.eclipse.leshan.core.response.ObserveResponse;
 import org.eclipse.leshan.core.response.ReadResponse;
 import org.eclipse.leshan.core.response.WriteAttributesResponse;
 import org.eclipse.leshan.core.response.WriteResponse;
-
+import org.eclipse.leshan.core.node.LwM2mSingleResource;
+import org.eclipse.leshan.core.node.LwM2mMultipleResource;
+import org.eclipse.leshan.core.node.TimestampedLwM2mNode;
 /**
  * A CoAP {@link Resource} in charge of handling requests targeting a lwM2M Object.
  */
@@ -121,6 +125,15 @@ public class ObjectResource extends LwM2mClientCoapResource implements ObjectLis
                 ObserveRequest observeRequest = new ObserveRequest(URI);
                 ObserveResponse response = nodeEnabler.observe(identity, observeRequest);
                 if (response.getCode() == org.eclipse.leshan.core.ResponseCode.CONTENT) {
+                    Collection<LwM2mResource> appendedResources = new ArrayList<>();
+                    LwM2mObjectInstance appendedObjectInstance = new LwM2mObjectInstance(response.getContent().getId(), appendedResources);
+                    ObserveResponse appendedResponse = new ObserveResponse(
+                    response.getCode(), 
+                    appendedObjectInstance, 
+                    response.getTimestampedLwM2mNode(), 
+                    response.getObservation(), 
+                    response.getErrorMessage());
+
                     LwM2mPath path = new LwM2mPath(URI);
                     LwM2mNode content = response.getContent();
                     LwM2mModel model = new StaticModel(nodeEnabler.getObjectModel());
